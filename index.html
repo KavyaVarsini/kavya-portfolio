@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kavya Varsini's Portfolio — Special Interests</title>
+  <style>
+    :root{
+      /* Try different theme here */
+      --bg:#f0f9ff;
+      --card:#ffffff;
+      --accent:#8b5cf6; /* purple */
+      --muted:#64748b;
+      --highlight:#ec4899; /* pink */
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif}
+    body{background:linear-gradient(135deg,#fdf4ff,#f0f9ff);color:#1e293b;min-height:100vh;}
+
+    header{
+      text-align:center;
+      padding:30px 20px;
+      background:linear-gradient(135deg,#8b5cf6,#6d28d9);
+      border-bottom:5px solid var(--highlight);
+      color:white;
+    }
+    header h1{font-size:26px;margin-bottom:8px;}
+    header p{opacity:0.9;font-size:14px}
+
+    .container{max-width:1000px;margin:20px auto;padding:0 15px;}
+    .card{background:var(--card);padding:20px;border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,0.1);margin-bottom:20px;transition:transform 0.3s ease,box-shadow 0.3s ease;}
+    .card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,0.15)}
+    .card h2{margin-bottom:12px;font-size:20px;color:var(--accent)}
+
+    .form-grid{display:grid;grid-template-columns:1fr 150px;gap:10px;margin-bottom:10px}
+    input,textarea,select{
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #e2e8f0;
+      outline:none;
+      background:#f1f5f9;
+      color:#1e293b;
+    }
+    input::placeholder,textarea::placeholder{color:#94a3b8}
+    button{
+      background:var(--accent);
+      border:none;
+      padding:10px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      color:white;
+      font-weight:bold;
+      transition:background 0.3s ease;
+    }
+    button:hover{background:#6d28d9}
+    button.ghost{background:transparent;border:1px solid #cbd5e1;color:#475569}
+
+    .interest-list{display:grid;gap:12px;margin-top:10px}
+    .interest{
+      background:linear-gradient(135deg,#f9fafb,#ffffff);
+      padding:14px;
+      border-radius:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      transition:transform 0.2s ease;
+      border:1px solid #e2e8f0;
+    }
+    .interest:hover{transform:scale(1.02)}
+    .interest strong{color:var(--highlight);font-size:16px}
+    .tags{color:var(--muted);font-size:13px;margin-top:6px}
+
+    footer{text-align:center;margin:30px 0;color:var(--muted);font-size:14px}
+
+    @media(max-width:768px){
+      .form-grid{grid-template-columns:1fr}
+      .interest{flex-direction:column;align-items:flex-start;gap:8px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌟 Kavya Varsini's Portfolio — Special Interests</h1>
+    <p>Highlighting passions in AI, Data, and cutting-edge technologies</p>
+  </header>
+
+  <div class="container">
+    <section class="card">
+      <h2>Add a Special Interest</h2>
+      <form id="interestForm">
+        <div class="form-grid">
+          <input name="title" placeholder="Interest title (e.g. Artificial Intelligence)" required>
+          <select name="category">
+            <option value="AI">AI</option>
+            <option value="Data">Data</option>
+            <option value="Web">Web Development</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <textarea name="desc" placeholder="Short description" rows="2"></textarea>
+        <input name="tags" placeholder="Tags (comma separated e.g. ML, Deep Learning)">
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button type="submit">➕ Add Interest</button>
+          <button type="button" class="ghost" id="clearBtn">🗑 Clear All</button>
+          <button type="button" id="exportBtn">📤 Export JSON</button>
+          <button type="button" class="ghost" id="printBtn">🖨 Print</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>My Interests</h2>
+      <div class="interest-list" id="interestList"></div>
+    </section>
+
+    <footer>
+      ✨ Keep updating your interests to showcase your growth in technology and passion areas ✨
+    </footer>
+  </div>
+
+  <script>
+    const form=document.getElementById('interestForm');
+    const list=document.getElementById('interestList');
+    const clearBtn=document.getElementById('clearBtn');
+    const exportBtn=document.getElementById('exportBtn');
+    const printBtn=document.getElementById('printBtn');
+    const key='special_interests_v2';
+
+    let interests=load()||[];
+
+    function save(){localStorage.setItem(key,JSON.stringify(interests))}
+    function load(){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return[]}}
+    function uid(){return Math.random().toString(36).slice(2,9)}
+
+    function render(){
+      list.innerHTML='';
+      interests.forEach(item=>{
+        const div=document.createElement('div');div.className='interest';
+        div.innerHTML=`<div><strong>${escapeHtml(item.title)}</strong> <span class="tags">(${item.category})</span><div class="tags">${item.desc||''}<br>${item.tags.join(', ')}</div></div><button data-id="${item.id}" class="ghost">❌ Remove</button>`;
+        div.querySelector('button').addEventListener('click',()=>remove(item.id));
+        list.appendChild(div);
+      });
+    }
+
+    function add(data){
+      interests.push({id:uid(),title:data.title,category:data.category,desc:data.desc||'',tags:(data.tags||'').split(',').map(s=>s.trim()).filter(Boolean)});
+      save();render();
+    }
+    function remove(id){interests=interests.filter(x=>x.id!==id);save();render()}
+    function clearAll(){if(confirm('Clear all interests?')){interests=[];save();render()}}
+    function exportJSON(){
+      const blob=new Blob([JSON.stringify(interests,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download='special_interests.json';a.click();URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+    form.addEventListener('submit',e=>{e.preventDefault();add(Object.fromEntries(new FormData(form).entries()));form.reset()});
+    clearBtn.addEventListener('click',clearAll);
+    exportBtn.addEventListener('click',exportJSON);
+    printBtn.addEventListener('click',()=>window.print());
+
+    render();
+  </script>
+</body>
+</html>
